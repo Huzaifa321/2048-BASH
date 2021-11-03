@@ -1,0 +1,272 @@
+#!/bin/bash
+declare -A array
+row=4
+col=4
+Score=0
+High=0
+ for ((i=0;i<4;i++)) # initiazlizing array with 0
+        do
+                for((j=0;j<col;j++))
+                do
+                         array[$i,$j]=0
+                 done
+         done
+         
+high() # for highest score value in text file
+         {
+         cat Score.txt | sort -n | tail -1
+         }
+score() #for saving score in text file
+{
+echo $Score>>Score.txt #apprehend
+}
+board() #printing grid in stylish method
+{
+    echo "*******************"
+        for ((i=0;i<row;i++))
+        do
+                for((j=0;j<col;j++))
+                do 
+                
+                printf " "${array[$i,$j]}" "
+                
+                         printf " |" 
+                        
+                 done
+                 printf "\n"
+                 echo "*******************"
+         done
+}
+Random() #generating random peice on random index
+{
+        random=0
+        until [ $random -eq 2 ] || [ $random -eq 4 ]
+        do
+                random=$((2+RANDOM%4)) #from 2 to 4 generate number
+
+          done
+          random1=$((0+RANDOM%4)) #for generating random indexes
+
+          random2=$((0+RANDOM%4)) #for generating random indexes
+
+          if [ $((array[$random1,$random2])) -eq 0 ]
+          then
+                  array[$random1,$random2]=$random # storing in array
+          else
+                  Random
+          fi
+}
+win() #win condition
+{
+for ((i=0;i<row;i++))
+do
+for ((j=0;j<col;j++))
+do
+if [ ${array[$i,$j]} -eq 2048 ]
+then
+echo GAME WIN
+break 
+fi
+done
+done
+}
+lose() #lose condition
+{
+lose=0
+for ((i=0;i<row;i++))
+do
+for ((j=0;j<col;j++))
+do
+if [ ${array[$i,$j]} -ne 0 ]
+then
+((lose++))
+fi
+if [ $lose -eq 16 ] # when there is no empty box left you lose the game
+then 
+score
+echo GAME OVER
+echo No Empty space left in the box
+echo please try again
+exit
+fi
+done
+done
+}
+right() #right movement
+{
+swap=0
+sum=0
+temp1=0
+temp2=0
+        for ((i=0;i<row;i++))
+        do
+                for((j=0,k=1;j<col-1;j++,k++)) #logic comparing column
+     
+              do
+              if [ $((array[$i,$j])) -eq $((array[$i,$k])) ]
+              then
+              temp1=${array[$i,$j]}
+	      temp2=${array[$i,$k]}
+	      sum=$(($temp1+$temp2)) # for storing their sum
+	      Score=$(($Score+$sum)) # storing score
+              array[$i,$k]=$sum
+              array[$i,$j]=0               
+              elif [ ${array[$i,$k]} -eq 0 ]
+              then
+              swap=${array[$i,$j]} #swaping value 
+              array[$i,$j]=${array[$i,$k]}
+              array[$i,$k]=$swap
+              right # using recursion inorder until all elements are swapped completely
+              fi
+              done
+              done                   
+}
+left()
+{
+swap=0
+sum=0
+temp1=0
+temp2=0
+        for ((i=0;i<row;i++))
+        do
+                for((j=col-1,k=col-2;j>0;j--,k--)) #logic comparing column
+     
+              do
+              if [ $((array[$i,$j])) -eq $((array[$i,$k])) ]
+              then
+              temp1=${array[$i,$j]}
+	      temp2=${array[$i,$k]}	      
+	      sum=$(($temp1+$temp2)) # for storing their sum
+	     Score=$(($Score+$sum)) # storing score
+              array[$i,$k]=$sum
+              array[$i,$j]=0              
+              elif [ ${array[$i,$k]} -eq 0 ]
+              then
+              swap=${array[$i,$j]} #swaping value 
+              array[$i,$j]=${array[$i,$k]}
+              array[$i,$k]=$swap
+              left # using recursion inorder until all elements are swapped completely
+              fi
+              done
+              done                   
+}
+up()
+{
+swap=0
+sum=0
+temp1=0
+temp2=0
+        for((i=0;i<row;i++))
+        do
+            for((j=col-1,k=col-2;j>0;j--,k--)) # logic comparing row 
+              do
+              if [ $((array[$j,$i])) -eq $((array[$k,$i])) ]
+              then
+              temp1=${array[$j,$i]}
+	      temp2=${array[$k,$i]}	     
+	      sum=$(($temp1+$temp2)) # for storing their sum
+	      Score=$(($Score+$sum)) # storing score
+	      array[$j,$i]=0
+              array[$k,$i]=$sum           
+              else
+              if [ $((array[$k,$i])) -eq 0 ]
+              then
+              swap=${array[$j,$i]} #swaping value 
+              array[$j,$i]=${array[$k,$i]}
+              array[$k,$i]=$swap
+              up # using recursion inorder until all elements are swapped completely
+              fi
+            fi
+              done
+        done                   
+}
+down()
+{
+swap=0
+sum=0
+temp1=0
+temp2=0
+        for((i=0;i<row;i++))
+        do
+            for((j=0,k=1;j<col-1;j++,k++)) #logic comparing row
+              do
+              if [ $((array[$j,$i])) -eq $((array[$k,$i])) ]
+              then
+              temp1=${array[$j,$i]}
+	      temp2=${array[$k,$i]}
+	      sum=$(($temp1+$temp2)) # for storing their sum
+	      Score=$(($Score+$sum)) # storing score
+	      array[$j,$i]=0
+              array[$k,$i]=$sum
+              else
+              if [ $((array[$k,$i])) -eq 0 ]
+              then
+              swap=${array[$j,$i]} #swaping value 
+              array[$j,$i]=${array[$k,$i]}
+              array[$k,$i]=$swap
+              down  # using recursion inorder until all elements are swapped completely
+              fi
+            fi
+              done
+        done                   
+}
+menu() #menu for game
+{
+    opt=0
+    while [ $opt -eq 0 ]
+    do
+        echo "$(tput setaf 1)Press 2 for Upward movements " #left side code for color of text 
+        echo "$(tput setaf 2)Press 4 for Downward movements "
+        echo "$(tput setaf 3)Press 3 for Rightside movements "
+        echo "$(tput setaf 4)Press 1 for Leftside movements "
+        echo "$(tput setaf 5)Press -1 for Quitting"
+        echo "$(tput setaf 6)$(tput setab 7)Enter your choice" #right side code for the background of color of text
+        read n1          
+        if [ $n1 -eq 3 ]
+        then
+        
+                right
+                Random
+                board
+          
+          elif [ $n1 -eq 1 ]
+          then
+            left 
+            Random
+            board
+              elif [ $n1 -eq 2 ]
+          then
+            up
+            Random
+            board
+              elif [ $n1 -eq 4 ]
+          then
+            down
+            Random
+            board
+            
+        fi
+        if [ $n1 -eq -1 ] # for terminating the program
+        then
+        echo The score wont be saved because you quitted the game astla vista
+        echo Score=$Score 
+        echo Highest=`high`
+        break
+        fi
+        clear
+        echo  "********************* 2048 GAME *************************"
+        echo Score=$Score 
+        echo Highest=`high`        
+        printf "\n\n"
+
+        win
+        lose                
+      board        
+        done
+            
+}
+# two times random numbers are generated because in every 2048 game scenerio 2 random number are generated it can be either 2 or 4
+Random
+Random
+board
+menu
